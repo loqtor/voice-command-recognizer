@@ -13,6 +13,7 @@
     "@types/react-redux": "^7.1.5",
     "@types/react-router-dom": "^5.1.3",
     "core-js": "^3.6.0",
+    "fuzzyset.js": "0.0.91",
     "history": "^4.10.1",
     "node-sass": "^4.13.0",
     "react": "^16.12.0",
