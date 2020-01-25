@@ -1,9 +1,20 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { VoiceCommandRecognizer } from '../components/voice-command-recognizer';
+
+const search = (results?: string[]) => {
+  console.log('This is the search: ', results);
+  return;
+};
 
 export const Home = () => (
   <>
-    <h1>Welcome to the boilerplate!</h1>
-    <Link to="example">See an example page</Link>
+    <VoiceCommandRecognizer
+      commands={[
+        {
+          phrases: ['search', 'look for', 'find'],
+          callback: search,
+        }
+      ]}
+    />
   </>
 );
