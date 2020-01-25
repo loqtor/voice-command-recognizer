@@ -1,9 +1,15 @@
 import React, { Component } from 'react';
 
+interface Command {
+  phrases: string[];
+  callback: (results?: string[]) => void;
+}
+
 interface VoiceCommandRecognizerProps {
-  onMatch: () => void;
-  onFuzzyMatch: () => void;
-  onNotMatch: () => void;
+  onMatch?: () => void;
+  onFuzzyMatch?: () => void;
+  onNotMatch?: () => void;
+  commands: Command[];
 };
 
 enum Status {
@@ -28,7 +34,7 @@ interface AnnyangOptions {
 }
 
 interface AnnyangCommands {
-  [keyof: string]: () => {}
+  [keyof: string]: (results?: string[]) => void;
 }
 
 interface Annyang {
@@ -43,7 +49,21 @@ interface Annyang {
 
 declare var annyang: Annyang;
 
-export class VoiceCommandRecognizer extends Component {
+const formatForAnnyang = (commands: Command[]) => {
+  const annyangFormattedCommands: AnnyangCommands = {};
+
+  commands.forEach((command: Command) => {
+    const { phrases } = command;
+
+    phrases.forEach((phrase: string) => {
+      annyangFormattedCommands[phrase] = command.callback;
+    });
+  });
+
+  return annyangFormattedCommands;
+}
+
+export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Component<VoiceCommandRecognizerProps> {
   constructor(props: VoiceCommandRecognizerProps) {
     super(props);
 
@@ -57,6 +77,9 @@ export class VoiceCommandRecognizer extends Component {
         error: Errors.UNSUPPORTED,
         status: Status.FAILED,
       };
+
+      const formattedCommands = formatForAnnyang(props.commands);
+      console.log('formattedCommands: ', formattedCommands);
 
       return;
     }
