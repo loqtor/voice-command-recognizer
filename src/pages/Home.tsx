@@ -1,27 +1,42 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { VoiceCommandRecognizer } from '../components/voice-command-recognizer';
 
-const search = (results?: string[]) => {
-  console.log('This is the search: ', results);
-  return;
-};
+interface HomeState {
+  counter: number;
+}
 
-export const Home = () => {
-  const onMatch = (results?: string[]) => {
-    console.log('results: ', results);
-  };
+export class Home extends Component<{}, HomeState> {
+  constructor(props: {}) {
+    super(props)
 
-  return (
-    <>
-      <VoiceCommandRecognizer
-        onMatch={onMatch}
-        commands={[
-          {
-            phrases: ['search', 'look for', 'find'],
-            callback: search,
-          }
-        ]}
-      />
-    </>
-  );
-};
+    this.state = {
+      counter: 0,
+    };
+  }
+
+  render() {
+    const { counter } = this.state;
+
+    return (
+      <>
+        <VoiceCommandRecognizer
+          commands={[
+            {
+              phrases: ['search', 'look for', 'find'],
+              callback: () => {
+                const { counter } = this.state;
+
+                this.setState({
+                  counter: counter + 1,
+                });
+              },
+            }
+          ]}
+        >
+          <p>Children test</p>
+          <p>Commands recognized: {counter}</p>
+        </VoiceCommandRecognizer>
+      </>
+    );
+  }
+}

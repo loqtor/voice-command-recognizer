@@ -6,7 +6,6 @@ interface Command {
 }
 
 interface VoiceCommandRecognizerProps {
-  onMatch?: (results?: string[]) => void;
   onFuzzyMatch?: (results?: string[]) => void;
   onNotMatch?: (results?: string[]) => void;
   onStart?: () => void;
@@ -90,13 +89,13 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       const formattedCommands = formatForAnnyang(props.commands);
       annyang.addCommands(formattedCommands);
     }
-    const { onStart, onPermissionBlocked, onPermissionDenied, onNotMatch, onMatch } = props;
-    
+
+    const { onStart, onPermissionBlocked, onPermissionDenied, onNotMatch } = props;
+
     annyang.addCallback('start', onStart ? onStart : () => {});
     annyang.addCallback('errorPermissionBlocked', onPermissionBlocked ? onPermissionBlocked : () => {});
     annyang.addCallback('errorPermissionDenied', onPermissionDenied ? onPermissionDenied : () => {});
     annyang.addCallback('resultNoMatch', onNotMatch ? onNotMatch : () => {});
-    annyang.addCallback('resultMatch', onMatch ? onMatch : () => {});
 
     annyang.start();
   }
