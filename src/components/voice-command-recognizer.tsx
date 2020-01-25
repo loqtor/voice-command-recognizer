@@ -50,6 +50,7 @@ interface Annyang {
   start: (options?: AnnyangOptions) => void;
   abort: () => void;
   addCommands: (commands: AnnyangCommands) => void;
+  pause: () => void;
   removeCommands: (command: string) => void;
   removeCallback: (type: string, callback?: () => {}) => void;
   addCallback: (event: string, callback: () => void) => void;
@@ -96,7 +97,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       annyang.addCommands(formattedCommands);
     }
 
-    const { onPermissionBlocked, onPermissionDenied, onNotMatch, startVoiceRecognition } = props;
+    const { onPermissionBlocked, onPermissionDenied, startVoiceRecognition } = props;
 
     annyang.addCallback('start', this.onStart);
     annyang.addCallback('errorPermissionBlocked', onPermissionBlocked ? onPermissionBlocked : () => {});
@@ -130,6 +131,16 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
 
   onNotMatch = (results?: string[]) => {
     console.log('results: ', results);
+  }
+
+  componentDidUpdate() {
+    const { startVoiceRecognition } = this.props;
+
+    if (!startVoiceRecognition) {
+      annyang.pause();
+    } else if (!annyang.isListening()) {
+      annyang.start();
+    }
   }
 
   render() {

@@ -3,6 +3,7 @@ import { VoiceCommandRecognizer } from '../components/voice-command-recognizer';
 
 interface HomeState {
   counter: number;
+  recognizing: boolean;
 }
 
 export class Home extends Component<{}, HomeState> {
@@ -11,16 +12,23 @@ export class Home extends Component<{}, HomeState> {
 
     this.state = {
       counter: 0,
+      recognizing: true,
     };
   }
 
+  toggleRecognition = () => {
+    this.setState({
+      recognizing: !this.state.recognizing,
+    });
+  }
+
   render() {
-    const { counter } = this.state;
+    const { counter, recognizing } = this.state;
 
     return (
       <>
         <VoiceCommandRecognizer
-          startVoiceRecognition={true}
+          startVoiceRecognition={recognizing}
           commands={[
             {
               phrases: ['search', 'look for', 'find'],
@@ -37,6 +45,7 @@ export class Home extends Component<{}, HomeState> {
           <p>Children test</p>
           <p>Commands recognized: {counter}</p>
         </VoiceCommandRecognizer>
+        <button onClick={this.toggleRecognition}>Toggle recognition</button>
       </>
     );
   }
