@@ -6,10 +6,14 @@ interface Command {
 }
 
 interface VoiceCommandRecognizerProps {
-  onMatch?: () => void;
-  onFuzzyMatch?: () => void;
-  onNotMatch?: () => void;
+  onMatch?: (results?: string[]) => void;
+  onFuzzyMatch?: (results?: string[]) => void;
+  onNotMatch?: (results?: string[]) => void;
+  onStart?: () => void;
+  onPermissionBlocked?: () => void;
+  onPermissionDenied?: () => void;
   commands: Command[];
+  fuzzyMatchThreshold?: number;
 };
 
 enum Status {
@@ -77,12 +81,22 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
         error: Errors.UNSUPPORTED,
         status: Status.FAILED,
       };
-
-      const formattedCommands = formatForAnnyang(props.commands);
-      console.log('formattedCommands: ', formattedCommands);
-
+  
       return;
+    
     }
+    const formattedCommands = formatForAnnyang(props.commands);
+
+    const { onStart, onPermissionBlocked, onPermissionDenied, onNotMatch, onMatch } = props;
+
+    annyang.addCommands(formattedCommands);
+    annyang.addCallback('start', onStart ? onStart : () => {});
+    annyang.addCallback('errorPermissionBlocked', onPermissionBlocked ? onPermissionBlocked : () => {});
+    annyang.addCallback('errorPermissionDenied', onPermissionDenied ? onPermissionDenied : () => {});
+    annyang.addCallback('resultNoMatch', onNotMatch ? onNotMatch : () => {});
+    annyang.addCallback('resultMatch', onMatch ? onMatch : () => {});
+
+    annyang.start();
   }
 
   render() {

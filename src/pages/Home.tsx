@@ -6,15 +6,22 @@ const search = (results?: string[]) => {
   return;
 };
 
-export const Home = () => (
-  <>
-    <VoiceCommandRecognizer
-      commands={[
-        {
-          phrases: ['search', 'look for', 'find'],
-          callback: search,
-        }
-      ]}
-    />
-  </>
-);
+export const Home = () => {
+  const onMatch = (results?: string[]) => {
+    console.log('results: ', results);
+  };
+
+  return (
+    <>
+      <VoiceCommandRecognizer
+        onMatch={onMatch}
+        commands={[
+          {
+            phrases: ['search', 'look for', 'find'],
+            callback: search,
+          }
+        ]}
+      />
+    </>
+  );
+};
