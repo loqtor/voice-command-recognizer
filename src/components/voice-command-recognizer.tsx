@@ -1,5 +1,20 @@
 import React, { Component } from 'react';
 
+enum Status {
+  AUTHORIZING = 'authorizing',
+  STARTING = 'starting',
+  RECOGNIZING = 'recognizing',
+  FINISHED = 'finished',
+  FAILED = 'failed',
+};
+
+enum Errors {
+  BROWSER_DENIAL = 'browser-denial',
+  USER_DENIAL = 'user-denial',
+  UNSUPPORTED = 'unsupported',
+  UNEXPECTED = 'unexpected',
+}
+
 interface Command {
   phrases: string[];
   callback: (results?: string[]) => void;
@@ -15,19 +30,9 @@ interface VoiceCommandRecognizerProps {
   fuzzyMatchThreshold?: number;
 };
 
-enum Status {
-  AUTHORIZING = 'authorizing',
-  STARTING = 'starting',
-  RECOGNIZING = 'recognizing',
-  FINISHED = 'finished',
-  FAILED = 'failed',
-};
-
-enum Errors {
-  BROWSER_DENIAL = 'browser-denial',
-  USER_DENIAL = 'user-denial',
-  UNSUPPORTED = 'unsupported',
-  UNEXPECTED = 'unexpected',
+interface VoiceCommandRecognizerState {
+  error: string,
+  status: Status;
 }
 
 interface AnnyangOptions {
@@ -66,7 +71,7 @@ const formatForAnnyang = (commands: Command[]) => {
   return annyangFormattedCommands;
 }
 
-export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Component<VoiceCommandRecognizerProps> {
+export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Component<VoiceCommandRecognizerProps, VoiceCommandRecognizerState> {
   constructor(props: VoiceCommandRecognizerProps) {
     super(props);
 
