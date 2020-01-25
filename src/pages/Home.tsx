@@ -20,6 +20,7 @@ export class Home extends Component<{}, HomeState> {
     return (
       <>
         <VoiceCommandRecognizer
+          startVoiceRecognition={true}
           commands={[
             {
               phrases: ['search', 'look for', 'find'],

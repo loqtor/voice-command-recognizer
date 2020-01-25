@@ -21,6 +21,7 @@ interface Command {
 }
 
 interface VoiceCommandRecognizerProps {
+  startVoiceRecognition?: boolean;
   onFuzzyMatch?: (results?: string[]) => void;
   onNotMatch?: (results?: string[]) => void;
   onStart?: () => void;
@@ -31,14 +32,14 @@ interface VoiceCommandRecognizerProps {
 };
 
 interface VoiceCommandRecognizerState {
-  error: string,
+  error?: string,
   status: Status;
 }
 
 interface AnnyangOptions {
-  autorestart: boolean;
-  continuous: boolean;
-  paused: boolean;
+  autorestart?: boolean;
+  continuous?: boolean;
+  paused?: boolean;
 }
 
 interface AnnyangCommands {
@@ -95,14 +96,40 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       annyang.addCommands(formattedCommands);
     }
 
-    const { onStart, onPermissionBlocked, onPermissionDenied, onNotMatch } = props;
+    const { onPermissionBlocked, onPermissionDenied, onNotMatch, startVoiceRecognition } = props;
 
-    annyang.addCallback('start', onStart ? onStart : () => {});
+    annyang.addCallback('start', this.onStart);
     annyang.addCallback('errorPermissionBlocked', onPermissionBlocked ? onPermissionBlocked : () => {});
     annyang.addCallback('errorPermissionDenied', onPermissionDenied ? onPermissionDenied : () => {});
-    annyang.addCallback('resultNoMatch', onNotMatch ? onNotMatch : () => {});
+    annyang.addCallback('resultNoMatch', this.onNotMatch);
+    
+    this.state = {
+      status: Status.AUTHORIZING,
+    };
 
-    annyang.start();
+    if (!startVoiceRecognition) {
+      annyang.start({ paused: true });
+    } else {
+      annyang.start();
+    }
+  }
+
+  onStart = () => {
+    this.setState({
+      status: Status.RECOGNIZING,
+    }, () => {
+      const { onStart } = this.props;
+
+      if (!onStart) {
+        return;
+      }
+
+      onStart();
+    });
+  }
+
+  onNotMatch = (results?: string[]) => {
+    console.log('results: ', results);
   }
 
   render() {
