@@ -12,7 +12,7 @@ interface VoiceCommandRecognizerProps {
   onStart?: () => void;
   onPermissionBlocked?: () => void;
   onPermissionDenied?: () => void;
-  commands: Command[];
+  commands?: Command[];
   fuzzyMatchThreshold?: number;
 };
 
@@ -85,11 +85,13 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       return;
     
     }
-    const formattedCommands = formatForAnnyang(props.commands);
 
+    if (props.commands) {
+      const formattedCommands = formatForAnnyang(props.commands);
+      annyang.addCommands(formattedCommands);
+    }
     const { onStart, onPermissionBlocked, onPermissionDenied, onNotMatch, onMatch } = props;
-
-    annyang.addCommands(formattedCommands);
+    
     annyang.addCallback('start', onStart ? onStart : () => {});
     annyang.addCallback('errorPermissionBlocked', onPermissionBlocked ? onPermissionBlocked : () => {});
     annyang.addCallback('errorPermissionDenied', onPermissionDenied ? onPermissionDenied : () => {});
@@ -100,10 +102,11 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
   }
 
   render() {
+    const { children } = this.props;
+
     return (
       <div className="VoiceCommandRecognizer">
-        <div className="Container">
-        </div>
+        {children}
       </div>
     );
   }
