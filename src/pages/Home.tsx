@@ -41,6 +41,7 @@ export class Home extends Component<{}, HomeState> {
               },
             }
           ]}
+          keyCommand='hey computer'
           fuzzyMatchThreshold={0.9}
         >
           <p>Children test</p>
