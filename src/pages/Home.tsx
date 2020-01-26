@@ -13,7 +13,7 @@ export class Home extends Component<{}, HomeState> {
     this.state = {
       counter: 0,
       recognizing: true,
-    };
+    }; 
   }
 
   toggleRecognition = () => {
@@ -41,6 +41,7 @@ export class Home extends Component<{}, HomeState> {
               },
             }
           ]}
+          fuzzyMatchThreshold={0.9}
         >
           <p>Children test</p>
           <p>Commands recognized: {counter}</p>

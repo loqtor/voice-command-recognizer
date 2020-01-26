@@ -101,7 +101,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
 
     if (commands) {
       const formattedCommandsForFuzzy = commands.reduce((set: string[], command: Command) => {
-        set.concat(command.phrases);
+        set = set.concat(command.phrases);
         return set;
       }, [] as string[]);
 
@@ -144,7 +144,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
   }
 
   getFuzzyMatch = (results: string[]) => {
-    const { fuzzyMatchThreshold } = this.state;
+    const { fuzzyMatchThreshold } = this.props;
 
     if (!results || !results.length || !fuzzyMatchThreshold) {
       return;
@@ -152,17 +152,18 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
 
     let fuzzyMatch: [number, string] = [0, ''];
     const fuzzyMatchingResult = results.find((result: string) => {
+
       const matches = this.fuzzySet.get(result);
 
       if (!matches) {
         return false;
       }
 
-      const currentResultMatch = matches.find((match: [number, string]) => result === match[1]);
-      const isItAFuzzyMatch = currentResultMatch && currentResultMatch[0] >= fuzzyMatchThreshold;
+      const [fuzzyMatchingPercentage] = matches[0];
+      const isItAFuzzyMatch = fuzzyMatchingPercentage >= fuzzyMatchThreshold;
 
       if (isItAFuzzyMatch) {
-        fuzzyMatch = currentResultMatch;
+        fuzzyMatch = matches[0];
       }
 
       return isItAFuzzyMatch;
@@ -183,10 +184,9 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
   }
 
   onNotMatch = (results?: string[]) => {
-    debugger;
-    if (results && this.state.fuzzyMatchThreshold) {
+    if (results && this.props.fuzzyMatchThreshold) {
       const fuzzyMatch = this.getFuzzyMatch(results);
-  
+
       if (fuzzyMatch) {
         annyang.trigger(fuzzyMatch.match[1]);
       }
