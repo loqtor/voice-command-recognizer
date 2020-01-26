@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import FuzzySet from 'fuzzyset.js';
-import { STATUS_CODES } from 'http';
 
 enum Status {
   AUTHORIZING = 'authorizing',
@@ -184,6 +183,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
   }
 
   onNotMatch = (results?: string[]) => {
+    debugger;
     if (results && this.state.fuzzyMatchThreshold) {
       const fuzzyMatch = this.getFuzzyMatch(results);
   
