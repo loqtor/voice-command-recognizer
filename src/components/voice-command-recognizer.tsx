@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import FuzzySet from 'fuzzyset.js';
+import { STATUS_CODES } from 'http';
 
 enum Status {
   AUTHORIZING = 'authorizing',
@@ -6,6 +8,7 @@ enum Status {
   RECOGNIZING = 'recognizing',
   FINISHED = 'finished',
   FAILED = 'failed',
+  PAUSED = 'paused',
 };
 
 enum Errors {
@@ -34,6 +37,7 @@ interface VoiceCommandRecognizerProps {
 interface VoiceCommandRecognizerState {
   error?: string,
   status: Status;
+  fuzzyMatchThreshold?: number;
 }
 
 interface AnnyangOptions {
@@ -47,14 +51,15 @@ interface AnnyangCommands {
 }
 
 interface Annyang {
-  start: (options?: AnnyangOptions) => void;
   abort: () => void;
+  addCallback: (event: string, callback: () => void) => void;
   addCommands: (commands: AnnyangCommands) => void;
+  isListening: () => boolean;
   pause: () => void;
   removeCommands: (command: string) => void;
   removeCallback: (type: string, callback?: () => {}) => void;
-  addCallback: (event: string, callback: () => void) => void;
-  isListening: () => boolean;
+  start: (options?: AnnyangOptions) => void;
+  trigger: (command: string) => void;
 }
 
 declare var annyang: Annyang;
@@ -74,6 +79,8 @@ const formatForAnnyang = (commands: Command[]) => {
 }
 
 export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Component<VoiceCommandRecognizerProps, VoiceCommandRecognizerState> {
+  fuzzySet: any;
+
   constructor(props: VoiceCommandRecognizerProps) {
     super(props);
 
@@ -89,11 +96,19 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       };
   
       return;
-    
     }
 
-    if (props.commands) {
-      const formattedCommands = formatForAnnyang(props.commands);
+    const { commands } = props;
+
+    if (commands) {
+      const formattedCommandsForFuzzy = commands.reduce((set: string[], command: Command) => {
+        set.concat(command.phrases);
+        return set;
+      }, [] as string[]);
+
+      this.fuzzySet = FuzzySet(formattedCommandsForFuzzy);
+
+      const formattedCommands = formatForAnnyang(commands);
       annyang.addCommands(formattedCommands);
     }
 
@@ -129,8 +144,60 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
     });
   }
 
+  getFuzzyMatch = (results: string[]) => {
+    const { fuzzyMatchThreshold } = this.state;
+
+    if (!results || !results.length || !fuzzyMatchThreshold) {
+      return;
+    }
+
+    let fuzzyMatch: [number, string] = [0, ''];
+    const fuzzyMatchingResult = results.find((result: string) => {
+      const matches = this.fuzzySet.get(result);
+
+      if (!matches) {
+        return false;
+      }
+
+      const currentResultMatch = matches.find((match: [number, string]) => result === match[1]);
+      const isItAFuzzyMatch = currentResultMatch && currentResultMatch[0] >= fuzzyMatchThreshold;
+
+      if (isItAFuzzyMatch) {
+        fuzzyMatch = currentResultMatch;
+      }
+
+      return isItAFuzzyMatch;
+    });
+
+    if (!fuzzyMatchingResult) {
+      return;
+    }
+
+    /**
+     * SR at times returns the results with a starting space.
+     * This ensures is just the words the user said that are taken into account.
+     */
+    return {
+      result: fuzzyMatchingResult.trim(),
+      match: fuzzyMatch,
+    };
+  }
+
   onNotMatch = (results?: string[]) => {
-    console.log('results: ', results);
+    if (results && this.state.fuzzyMatchThreshold) {
+      const fuzzyMatch = this.getFuzzyMatch(results);
+  
+      if (fuzzyMatch) {
+        annyang.trigger(fuzzyMatch.match[1]);
+      }
+    }
+
+    const { onNotMatch } = this.props;
+
+    if (onNotMatch) {
+      onNotMatch();
+      return;
+    }
   }
 
   componentDidUpdate() {
@@ -138,7 +205,19 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
 
     if (!startVoiceRecognition) {
       annyang.pause();
-    } else if (!annyang.isListening()) {
+
+      const { status } = this.state;
+
+      if (status !== Status.PAUSED) {
+        this.setState({
+          status: Status.PAUSED,
+        });
+      }
+
+      return;
+    }
+    
+    if (!annyang.isListening()) {
       annyang.start();
     }
   }
