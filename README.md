@@ -60,6 +60,6 @@ This is supported through Annyang. Have a look at their [doc's](https://github.c
 
 ## Next steps
 
-[] See how Annyang can be shipped as part of the component in an elegant way.
-[] Convert the component to an `npm` package.
-[] Integrate it in an actual app (migrate [Guess the Movie](https://github.com/loqtor/guess-the-movie) from its current implementation to use this component).
+- [ ] See how Annyang can be shipped as part of the component in an elegant way.
+- [ ] Convert the component to an `npm` package.
+- [ ] Integrate it in an actual app (migrate [Guess the Movie](https://github.com/loqtor/guess-the-movie) from its current implementation to use this component).
