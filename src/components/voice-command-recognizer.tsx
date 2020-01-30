@@ -25,7 +25,7 @@ interface Command {
 interface VoiceCommandRecognizerProps {
   keyCommand?: string;
   startVoiceRecognition?: boolean;
-  onFuzzyMatch?: (results?: string[]) => void;
+  onFuzzyMatch?: (match: string) => void;
   onNotMatch?: (results?: string[]) => void;
   onStart?: () => void;
   onPermissionBlocked?: () => void;
@@ -209,6 +209,13 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       const fuzzyMatch = this.getFuzzyMatch(results);
 
       if (fuzzyMatch) {
+        const { onFuzzyMatch } = this.props;
+
+        if (onFuzzyMatch) {
+          onFuzzyMatch(fuzzyMatch.match[1]);
+          return;
+        }
+
         annyang.trigger(fuzzyMatch.match[1]);
       }
     }
