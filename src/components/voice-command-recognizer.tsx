@@ -30,7 +30,7 @@ interface VoiceCommandRecognizerProps {
   onStart?: () => void;
   onPermissionBlocked?: () => void;
   onPermissionDenied?: () => void;
-  commands?: Command[];
+  commands: Command[];
   fuzzyMatchThreshold?: number;
 };
 
@@ -91,50 +91,47 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
     }
 
     const { commands, keyCommand } = props;
+    const formattedCommandsForFuzzy = commands.reduce((set: string[], command: Command) => {
+      set = set.concat(command.phrases);
+      return set;
+    }, [] as string[]);
 
-    if (commands) {
-      const formattedCommandsForFuzzy = commands.reduce((set: string[], command: Command) => {
-        set = set.concat(command.phrases);
-        return set;
-      }, [] as string[]);
+    this.fuzzySet = FuzzySet(formattedCommandsForFuzzy);
 
-      this.fuzzySet = FuzzySet(formattedCommandsForFuzzy);
+    const annyangFormattedCommands: AnnyangCommands = {};
 
-      const annyangFormattedCommands: AnnyangCommands = {};
+    commands.forEach((command: Command) => {
+      const { phrases } = command;
 
-      commands.forEach((command: Command) => {
-        const { phrases } = command;
+      phrases.forEach((phrase: string) => {
+        annyangFormattedCommands[phrase] = () => {
+          const { status, isRecognizerEnabled } = this.state;
 
-        phrases.forEach((phrase: string) => {
-          annyangFormattedCommands[phrase] = () => {
-            const { status, isRecognizerEnabled } = this.state;
+          if (keyCommand && phrase === keyCommand) {
+            this.toggleIsRecognizerEnabled();
+            return;
+          }
 
-            if (keyCommand && phrase === keyCommand) {
-              this.toggleIsRecognizerEnabled();
-              return;
-            }
+          if (status !== Status.RECOGNIZING || !isRecognizerEnabled) {
+            return;
+          }
 
-            if (status !== Status.RECOGNIZING || !isRecognizerEnabled) {
-              return;
-            }
-
-            command.callback();
-          };
-        });
-      });
-
-      if (keyCommand) {
-        annyangFormattedCommands[keyCommand] = this.toggleIsRecognizerEnabled;
-      }
-
-      annyang.addCommands(annyangFormattedCommands);
-
-      if (keyCommand) {
-        this.state = {
-          ...this.state,
-          isRecognizerEnabled: false,
+          command.callback();
         };
-      }
+      });
+    });
+
+    if (keyCommand) {
+      annyangFormattedCommands[keyCommand] = this.toggleIsRecognizerEnabled;
+    }
+
+    annyang.addCommands(annyangFormattedCommands);
+
+    if (keyCommand) {
+      this.state = {
+        ...this.state,
+        isRecognizerEnabled: false,
+      };
     }
 
     const { onPermissionBlocked, onPermissionDenied, startVoiceRecognition } = props;
@@ -152,8 +149,10 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
   }
 
   onStart = () => {
+    const { startVoiceRecognition } = this.props;
+
     this.setState({
-      status: Status.RECOGNIZING,
+      status: startVoiceRecognition ? Status.RECOGNIZING : Status.PAUSED,
     }, () => {
       const { onStart } = this.props;
 
