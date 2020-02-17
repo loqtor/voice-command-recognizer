@@ -238,7 +238,11 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
     const { startVoiceRecognition } = this.props;
 
     if (!startVoiceRecognition) {
-      annyang.pause();
+      /**
+       * `.abort` is used here so `onStart` is triggered again 
+       * for the status to be properly set when `.start` is rerun.
+       */
+      annyang.abort();
 
       const { status } = this.state;
 
@@ -250,8 +254,8 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
 
       return;
     }
-    
-    if (!annyang.isListening()) {
+
+    if (!annyang.isListening() || startVoiceRecognition) {
       annyang.start();
     }
   }
