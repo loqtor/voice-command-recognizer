@@ -47,7 +47,7 @@ export class Home extends Component<{}, HomeState> {
           <p>Children test</p>
           <p>Commands recognized: {counter}</p>
         </VoiceCommandRecognizer>
-        <button onClick={this.toggleRecognition}>Toggle recognition</button>
+        <button onClick={this.toggleRecognition}>{recognizing ? 'Pause' : 'Start recognition'}</button>
       </>
     );
   }
