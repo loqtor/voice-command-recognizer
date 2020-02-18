@@ -117,6 +117,10 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
           }
 
           command.callback();
+
+          if (keyCommand) {
+            this.toggleIsRecognizerEnabled();
+          }
         };
       });
     });
@@ -209,6 +213,8 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       const fuzzyMatch = this.getFuzzyMatch(results);
 
       if (fuzzyMatch) {
+        this.toggleIsRecognizerEnabled();
+
         const { onFuzzyMatch } = this.props;
 
         if (onFuzzyMatch) {
@@ -217,6 +223,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
         }
 
         annyang.trigger(fuzzyMatch.match[1]);
+        return;
       }
     }
 
