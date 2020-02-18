@@ -23,15 +23,17 @@ interface Command {
 }
 
 interface VoiceCommandRecognizerProps {
+  commands: Command[];
+  fuzzyMatchThreshold?: number;
   keyCommand?: string;
   startVoiceRecognition?: boolean;
-  onFuzzyMatch?: (results?: string[]) => void;
+  onFuzzyMatch?: (match: string) => void;
   onNotMatch?: (results?: string[]) => void;
   onStart?: () => void;
   onPermissionBlocked?: () => void;
   onPermissionDenied?: () => void;
-  commands?: Command[];
-  fuzzyMatchThreshold?: number;
+  onRecognizerDisabled?: () => void;
+  onRecognizerEnabled?: () => void;
 };
 
 interface VoiceCommandRecognizerState {
@@ -91,50 +93,51 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
     }
 
     const { commands, keyCommand } = props;
+    const formattedCommandsForFuzzy = commands.reduce((set: string[], command: Command) => {
+      set = set.concat(command.phrases);
+      return set;
+    }, [] as string[]);
 
-    if (commands) {
-      const formattedCommandsForFuzzy = commands.reduce((set: string[], command: Command) => {
-        set = set.concat(command.phrases);
-        return set;
-      }, [] as string[]);
+    this.fuzzySet = FuzzySet(formattedCommandsForFuzzy);
 
-      this.fuzzySet = FuzzySet(formattedCommandsForFuzzy);
+    const annyangFormattedCommands: AnnyangCommands = {};
 
-      const annyangFormattedCommands: AnnyangCommands = {};
+    commands.forEach((command: Command) => {
+      const { phrases } = command;
 
-      commands.forEach((command: Command) => {
-        const { phrases } = command;
+      phrases.forEach((phrase: string) => {
+        annyangFormattedCommands[phrase] = () => {
+          const { status, isRecognizerEnabled } = this.state;
 
-        phrases.forEach((phrase: string) => {
-          annyangFormattedCommands[phrase] = () => {
-            const { status, isRecognizerEnabled } = this.state;
+          if (keyCommand && phrase === keyCommand) {
+            this.toggleIsRecognizerEnabled();
+            return;
+          }
 
-            if (keyCommand && phrase === keyCommand) {
-              this.toggleIsRecognizerEnabled();
-              return;
-            }
+          if (status !== Status.RECOGNIZING || !isRecognizerEnabled) {
+            return;
+          }
 
-            if (status !== Status.RECOGNIZING || !isRecognizerEnabled) {
-              return;
-            }
+          command.callback();
 
-            command.callback();
-          };
-        });
-      });
-
-      if (keyCommand) {
-        annyangFormattedCommands[keyCommand] = this.toggleIsRecognizerEnabled;
-      }
-
-      annyang.addCommands(annyangFormattedCommands);
-
-      if (keyCommand) {
-        this.state = {
-          ...this.state,
-          isRecognizerEnabled: false,
+          if (keyCommand) {
+            this.toggleIsRecognizerEnabled();
+          }
         };
-      }
+      });
+    });
+
+    if (keyCommand) {
+      annyangFormattedCommands[keyCommand] = this.toggleIsRecognizerEnabled;
+    }
+
+    annyang.addCommands(annyangFormattedCommands);
+
+    if (keyCommand) {
+      this.state = {
+        ...this.state,
+        isRecognizerEnabled: false,
+      };
     }
 
     const { onPermissionBlocked, onPermissionDenied, startVoiceRecognition } = props;
@@ -152,8 +155,10 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
   }
 
   onStart = () => {
+    const { startVoiceRecognition } = this.props;
+
     this.setState({
-      status: Status.RECOGNIZING,
+      status: startVoiceRecognition ? Status.RECOGNIZING : Status.PAUSED,
     }, () => {
       const { onStart } = this.props;
 
@@ -210,7 +215,17 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       const fuzzyMatch = this.getFuzzyMatch(results);
 
       if (fuzzyMatch) {
+        this.toggleIsRecognizerEnabled();
+
+        const { onFuzzyMatch } = this.props;
+
+        if (onFuzzyMatch) {
+          onFuzzyMatch(fuzzyMatch.match[1]);
+          return;
+        }
+
         annyang.trigger(fuzzyMatch.match[1]);
+        return;
       }
     }
 
@@ -223,8 +238,17 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
   }
 
   toggleIsRecognizerEnabled = () => {
+    const isRecognizerEnabled = !this.state.isRecognizerEnabled;
+
     this.setState({
-      isRecognizerEnabled: !this.state.isRecognizerEnabled,
+      isRecognizerEnabled,
+    }, () => {
+      const { onRecognizerEnabled, onRecognizerDisabled } = this.props;
+      const callback = isRecognizerEnabled ? onRecognizerEnabled : onRecognizerDisabled;
+
+      if (callback) {
+        callback();
+      }
     });
   }
 
@@ -232,7 +256,11 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
     const { startVoiceRecognition } = this.props;
 
     if (!startVoiceRecognition) {
-      annyang.pause();
+      /**
+       * `.abort` is used here so `onStart` is triggered again 
+       * for the status to be properly set when `.start` is rerun.
+       */
+      annyang.abort();
 
       const { status } = this.state;
 
@@ -244,8 +272,8 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
 
       return;
     }
-    
-    if (!annyang.isListening()) {
+
+    if (!annyang.isListening() || startVoiceRecognition) {
       annyang.start();
     }
   }
