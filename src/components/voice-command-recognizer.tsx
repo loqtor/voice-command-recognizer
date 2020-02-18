@@ -23,6 +23,8 @@ interface Command {
 }
 
 interface VoiceCommandRecognizerProps {
+  commands: Command[];
+  fuzzyMatchThreshold?: number;
   keyCommand?: string;
   startVoiceRecognition?: boolean;
   onFuzzyMatch?: (match: string) => void;
@@ -30,8 +32,8 @@ interface VoiceCommandRecognizerProps {
   onStart?: () => void;
   onPermissionBlocked?: () => void;
   onPermissionDenied?: () => void;
-  commands: Command[];
-  fuzzyMatchThreshold?: number;
+  onRecognizerDisabled?: () => void;
+  onRecognizerEnabled?: () => void;
 };
 
 interface VoiceCommandRecognizerState {
@@ -236,8 +238,17 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
   }
 
   toggleIsRecognizerEnabled = () => {
+    const isRecognizerEnabled = !this.state.isRecognizerEnabled;
+
     this.setState({
-      isRecognizerEnabled: !this.state.isRecognizerEnabled,
+      isRecognizerEnabled,
+    }, () => {
+      const { onRecognizerEnabled, onRecognizerDisabled } = this.props;
+      const callback = isRecognizerEnabled ? onRecognizerEnabled : onRecognizerDisabled;
+
+      if (callback) {
+        callback();
+      }
     });
   }
 

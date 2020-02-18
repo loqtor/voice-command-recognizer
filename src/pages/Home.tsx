@@ -3,6 +3,7 @@ import { VoiceCommandRecognizer } from '../components/voice-command-recognizer';
 
 interface HomeState {
   counter: number;
+  enabled: boolean;
   recognizing: boolean;
 }
 
@@ -12,6 +13,7 @@ export class Home extends Component<{}, HomeState> {
 
     this.state = {
       counter: 0,
+      enabled: false,
       recognizing: true,
     }; 
   }
@@ -22,8 +24,14 @@ export class Home extends Component<{}, HomeState> {
     });
   }
 
+  toggleIsEnabled = () => {
+    this.setState({
+      enabled: !this.state.enabled,
+    });
+  }
+
   render() {
-    const { counter, recognizing } = this.state;
+    const { counter, enabled, recognizing } = this.state;
 
     return (
       <>
@@ -43,9 +51,12 @@ export class Home extends Component<{}, HomeState> {
           ]}
           keyCommand='hey computer'
           fuzzyMatchThreshold={0.9}
+          onRecognizerEnabled={this.toggleIsEnabled}
+          onRecognizerDisabled={this.toggleIsEnabled}
         >
           <p>Children test</p>
           <p>Commands recognized: {counter}</p>
+          <p>Speech recognizer is {enabled ? 'listening' : 'waiting for keyphrase'}</p>
         </VoiceCommandRecognizer>
         <button onClick={this.toggleRecognition}>{recognizing ? 'Pause' : 'Start recognition'}</button>
       </>
