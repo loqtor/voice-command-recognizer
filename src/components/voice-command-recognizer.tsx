@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import FuzzySet from 'fuzzyset.js';
+import { Annyang, CommandOption } from 'annyang';
 
 enum Status {
   AUTHORIZING = 'authorizing',
@@ -43,28 +44,6 @@ interface VoiceCommandRecognizerState {
   isRecognizerEnabled?: boolean;
 }
 
-interface AnnyangOptions {
-  autorestart?: boolean;
-  continuous?: boolean;
-  paused?: boolean;
-}
-
-interface AnnyangCommands {
-  [keyof: string]: (results?: string[]) => void;
-}
-
-interface Annyang {
-  abort: () => void;
-  addCallback: (event: string, callback: () => void) => void;
-  addCommands: (commands: AnnyangCommands) => void;
-  isListening: () => boolean;
-  pause: () => void;
-  removeCommands: (command: string) => void;
-  removeCallback: (type: string, callback?: () => {}) => void;
-  start: (options?: AnnyangOptions) => void;
-  trigger: (command: string) => void;
-}
-
 declare var annyang: Annyang;
 
 export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Component<VoiceCommandRecognizerProps, VoiceCommandRecognizerState> {
@@ -100,7 +79,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
 
     this.fuzzySet = FuzzySet(formattedCommandsForFuzzy);
 
-    const annyangFormattedCommands: AnnyangCommands = {};
+    const annyangFormattedCommands: CommandOption = {};
 
     commands.forEach((command: Command) => {
       const { phrases } = command;
@@ -140,18 +119,14 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       };
     }
 
-    const { onPermissionBlocked, onPermissionDenied, startVoiceRecognition } = props;
-
+    const { onPermissionBlocked, onPermissionDenied } = props;
+    
     annyang.addCallback('start', this.onStart);
     annyang.addCallback('errorPermissionBlocked', onPermissionBlocked ? onPermissionBlocked : () => {});
     annyang.addCallback('errorPermissionDenied', onPermissionDenied ? onPermissionDenied : () => {});
     annyang.addCallback('resultNoMatch', this.onNotMatch);
 
-    if (!startVoiceRecognition) {
-      annyang.start({ paused: true });
-    } else {
-      annyang.start();
-    }
+    annyang.start();
   }
 
   onStart = () => {
@@ -210,7 +185,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
     };
   }
 
-  onNotMatch = (results?: string[]) => {
+  onNotMatch = (_: string | undefined, __: string | undefined, results?: string[] | undefined) => {
     if (results && this.props.fuzzyMatchThreshold) {
       const fuzzyMatch = this.getFuzzyMatch(results);
 
@@ -273,7 +248,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       return;
     }
 
-    if (!annyang.isListening() || startVoiceRecognition) {
+    if (!annyang.isListening()) {
       annyang.start();
     }
   }
