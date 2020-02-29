@@ -1,12 +1,6 @@
 # voice-command-recognizer
 React component to recognize voice commands based on the Web Speech API (`SpeechRecognizer`).
 
-## Current status
-
-This repository consists of an app proving the concept of what I intend to do with its main component (`VoiceCommandRecognizer`).
-
-The app is based on `create-react-app` and is basically a home page invoking the component for testing.
-
 ## Dependencies
 
 It relies on [`annyang`](https://github.com/TalAter/annyang) (Speech Recognition library by [TalAlter](https://twitter.com/TalAter)) for command matching.
@@ -17,7 +11,7 @@ The string comparison is using [`fuzzyset.js`](https://glench.github.io/fuzzyset
 
 ## How the component works
 
-It's currently an HOC and you are capable of just conditionally rendering things inside it, based on its state (as with any other HOC).
+It's an HOC and you are capable of just conditionally rendering things inside it, based on its state (as with any other HOC).
 
 You can either set the component to be listening to everything or only enable listening once the user says a certain `keyphrase` that you can define through the component `props`. The `keyphrase` needs to be said before each command. The `voice-command-recognizer` stops listening after the first successfully understood command. So, the `keyphrase` if set, is expected to be said between the commands that are intended to be ran.
 
