@@ -15,7 +15,7 @@
     "type": "git",
     "url": "git+https://github.com/loqtor/voice-command-recognizer.git"
   },
-  "keywords": [],
+  "keywords": ["webspeechapi", "voicerecognition", "speechrecognition", "react", "speechrecognizer"],
   "author": "Martín Martínez",
   "license": "MIT",
   "bugs": {
