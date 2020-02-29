@@ -126,7 +126,9 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
     annyang.addCallback('errorPermissionDenied', onPermissionDenied ? onPermissionDenied : () => {});
     annyang.addCallback('resultNoMatch', this.onNotMatch);
 
-    annyang.start();
+    annyang.start({
+      autoRestart: true,
+    });
   }
 
   onStart = () => {
