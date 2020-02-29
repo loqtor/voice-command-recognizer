@@ -1,6 +1,6 @@
 {
   "name": "voice-command-recognizer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React HOC for voice command recognition. Based on Web Speech API's Speech Recognizer, using Annyang",
   "main": "dist/index.js",
   "scripts": {
