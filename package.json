@@ -9,7 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run build:types && npm run build:js",
     "build:types": "tsc -p .",
-    "build:js": "babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline"
+    "build:js": "babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline",
+    "preinstall": "npm install annyang @types/annyang"
   },
   "repository": {
     "type": "git",
