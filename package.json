@@ -7,10 +7,7 @@
     "prepare": "npm run-script build",
     "update": "npm version patch -m \"New version ready.\";npm publish",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run build:types && npm run build:js",
-    "build:types": "tsc -p .",
-    "build:js": "babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline",
-    "preinstall": "npm install annyang @types/annyang"
+    "build": "babel src --out-dir dist --extensions \".js,.jsx\" --source-maps inline"
   },
   "repository": {
     "type": "git",
@@ -49,7 +46,6 @@
     "@types/node": "^13.7.7",
     "@types/react": "^16.9.23",
     "@types/react-dom": "^16.9.5",
-    "annyang": "^2.6.1",
     "babel-loader": "^8.0.6",
     "fuzzyset.js": "0.0.91"
   }
