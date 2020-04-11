@@ -26,22 +26,10 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       isRecognizerEnabled: true,
       status: Status.LOADING_DEPENDENCIES,
     };
+  }
 
-    /**
-     * When Speech Recognition is not supported Annyang is not initialised
-     * and just set to null. This prevents exceptions from happening in those browsers
-     * where SR is not supported.
-     */
-    if (!annyang) {
-      this.state = {
-        error: Errors.UNSUPPORTED,
-        status: Status.FAILED,
-      };
-  
-      return;
-    }
-
-    const { commands, keyCommand } = props;
+  prepareRecognition() {
+    const { commands, keyCommand } = this.props;
     const formattedCommandsForFuzzy = commands.reduce((set, command) => {
       set = set.concat(command.phrases);
       return set;
@@ -89,7 +77,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
       };
     }
 
-    const { onPermissionBlocked, onPermissionDenied } = props;
+    const { onPermissionBlocked, onPermissionDenied } = this.props;
     
     annyang.addCallback('start', this.onStart);
     annyang.addCallback('errorPermissionBlocked', onPermissionBlocked ? onPermissionBlocked : () => {});
@@ -205,8 +193,28 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
     script.src = '//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js';
     script.type = 'text/javascript';
     
-    script.onload = () => this.setState({
-      status: status.AUTHORIZING,
+    /**
+     * This loads the main library for voice command recognition.
+     * The reason that it's imported like this it's because in spite of being available as a node
+     * module, I couldn't find a way to make it work nicely if it wasn't included in the 
+     * index as a script tag. #sorrynotsorry
+     */
+    script.onload = () => {
+      this.prepareRecognition();
+
+      this.setState({
+        status: status.AUTHORIZING,
+      });
+    };
+
+    /**
+     * When Speech Recognition is not supported Annyang is not initialised
+     * and just set to null. This prevents exceptions from happening in those browsers
+     * where SR is not supported.
+     */
+    script.onerror = () => this.setState({
+      error: Errors.UNSUPPORTED,
+      status: Status.FAILED,
     });
 
     document.body.append(script);
