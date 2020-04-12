@@ -250,7 +250,7 @@ export const VoiceCommandRecognizer = class VoiceCommandRecognizer extends Compo
 
     return (
       <div className="VoiceCommandRecognizer">
-        {children}
+        {children(this.props, this.state)}
       </div>
     );
   }
